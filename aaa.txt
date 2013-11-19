@@ -1,0 +1,66 @@
+--gw.startup
+ifconfig eth0 10.0.6.2 netmask 255.255.255.252 broadcast 10.0.6.3 up
+route add -net 10.0.0.0 netmask 255.255.0.0 gw 10.0.6.1 dev eth0
+--lab.conf
+
+--pc1.startup
+ifconfig eth0 10.0.1.1 netmask 255.255.255.0 broadcast 10.0.1.255 up
+route add default gw 10.0.1.2 dev eth0
+--pc2.startup
+ifconfig eth0 10.0.8.1 netmask 255.255.255.0 broadcast 10.0.8.255 up
+route add default gw 10.0.8.2 dev eth0
+--r1.startup
+ifconfig eth0 10.0.1.2 netmask 255.255.255.0 broadcast 10.0.1.3 up 
+ifconfig eth1 10.0.2.1 netmask 255.255.255.252 broadcast 10.0.2.3 up
+route add default gw 10.0.2.2 dev eth1  
+--r2.startup
+ifconfig eth0 10.0.2.2 netmask 255.255.255.252 broadcast 10.0.2.3 up
+ifconfig eth1 10.0.3.1 netmask 255.255.255.252 broadcast 10.0.3.3 up  
+ifconfig eth2 10.0.4.2 netmask 255.255.255.252 broadcast 10.0.4.3 up
+route add -net 10.0.1.0 netmask 255.255.255.0 gw 10.0.2.1 dev eth0
+/etc/init.d/zebra start
+--r3.startup
+ifconfig eth0 10.0.3.2 netmask 255.255.255.252 broadcast 10.0.3.3 up 
+ifconfig eth1 10.0.5.2 netmask 255.255.255.252 broadcast 10.0.5.3 up
+ifconfig eth2 10.0.6.1 netmask 255.255.255.252 broadcast 10.0.6.3 up
+route add default gw 10.0.6.2
+/etc/init.d/zebra start
+--r4.startup
+ifconfig eth0 10.0.4.1 netmask 255.255.255.252 broadcast 10.0.4.3 up 
+ifconfig eth1 10.0.5.1 netmask 255.255.255.252 broadcast 10.0.5.3 up  
+ifconfig eth2 10.0.7.2 netmask 255.255.255.252 broadcast 10.0.7.3 up
+/etc/init.d/zebra start
+--r5.startup
+ifconfig eth0 10.0.8.2 netmask 255.255.255.0 broadcast 10.0.8.255 up 
+ifconfig eth1 10.0.7.1 netmask 255.255.255.252 broadcast 10.0.7.3 up  
+/etc/init.d/zebra start
+
+--r2/etc/zebra/daemons
+zebra=yes 
+bgpd=no 
+ospfd=no 
+ospf6d=no 
+ripd=yes 
+ripngd=no
+--r2/etc/zebra/ripd.conf
+! 
+hostname r2 
+password zebra 
+enable password zebra 
+! 
+router rip 
+redistribute connected
+redistribute kernel 
+network 10.0.0.0/16 
+! 
+log file /var/log/zebra/ripd.log
+--r2/etc/zebra/zebra.conf
+hostname zebra 
+password zebra 
+enable password zebra 
+! 
+! Static default route sample. 
+! 
+!ip route 0.0.0.0/0 203.181.89.241 
+! 
+log file /var/log/zebra/zebra.log
